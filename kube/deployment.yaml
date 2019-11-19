@@ -1,0 +1,20 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kube-problem
+  labels:
+    app: kube-problem
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-problem
+  template:
+    metadata:
+      labels:
+        app: kube-problem
+    spec:
+      serviceAccount: kube-problem
+      containers:
+        - name: kube-problem
+          image: devspacecloud/kube-problem
