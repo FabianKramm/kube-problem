@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -20,6 +21,8 @@ func (r *Runner) doWatchNodes() error {
 			metric := nodeMetric
 			nodeMetricsMap[nodeMetric.Name] = &metric
 		}
+	} else if err != nil {
+		log.Printf("Couldn't get metrics for nodes: %v", err)
 	}
 
 	nodeList, err := r.client.Client().CoreV1().Nodes().List(metav1.ListOptions{})
@@ -127,4 +130,3 @@ func isNodeProblem(node *v1.Node) (*problemDesc, error) {
 
 	return nil, nil
 }
-
