@@ -1,6 +1,6 @@
 # Kube Problem Reporter
 
-Simple kube cluster watcher that checks periodically if all nodes and pods in a certain namespace are running and sends a message to a slack channel if there is a problem.
+Simple kube cluster watcher that checks periodically if all nodes and pods in a certain namespace are running and sends a message to a slack channel if there is a problem with a node or pod.
 
 # How to install
 

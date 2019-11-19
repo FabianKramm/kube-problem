@@ -18,3 +18,16 @@ spec:
       containers:
         - name: kube-problem
           image: devspacecloud/kube-problem
+          env:
+            # The slack token to use for sending messages
+            - name: SLACK_TOKEN
+              value: "YOUR_TOKEN (xoxb-)"
+            # The slack channel id to report to
+            - name: SLACK_CHANNEL
+              value: "CHANNEL_ID"
+            # Set this to false if nodes shouldn't be watched
+            - name: WATCH_NODES
+              value: "true"
+            # This can have multiple namespaces like mynamespace1,mynamespace2 etc.
+            - name: WATCH_NAMESPACES
+              value: kube-system
