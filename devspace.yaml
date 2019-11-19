@@ -1,0 +1,16 @@
+version: v1beta4
+images:
+  default:
+    image: devspacecloud/kube-problem
+    build:
+      docker:
+        options:
+          target: builder
+deployments:
+  - name: devspace-default
+    kubectl:
+      manifests:
+        - kube
+dev:
+  sync:
+    - imageName: default
