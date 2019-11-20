@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const defaultInterval = time.Second * 10
+const defaultInterval = time.Second * 60
 const reportInterval = time.Minute * 60
 
 type problemType string
@@ -74,6 +74,8 @@ func NewRunner(client kube.Client, slackClient *slack.Client, watchNodes bool, w
 		if err != nil {
 			return nil, fmt.Errorf("Error retrieving nodes: %v", err)
 		}
+
+		log.Println("Watching nodes")
 	}
 
 	if len(watchNamespaces) > 0 {
@@ -83,6 +85,8 @@ func NewRunner(client kube.Client, slackClient *slack.Client, watchNodes bool, w
 			if err != nil {
 				return nil, fmt.Errorf("Error retrieving namespace %s: %v", namespace, err)
 			}
+
+			log.Printf("Watching namespace: %s", namespace)
 		}
 	}
 
