@@ -4,7 +4,7 @@ Simple kube cluster watcher that checks periodically if all nodes and pods in a 
 
 Problems reporter reports:
 - Node conditions such as memory pressure or disk pressure
-- High node resource utilization (>95% of memory or cpu)
+- High node resource utilization (>95% of memory or cpu) (only if metrics server is available)
 - Critical pod status such as (ErrImagePull, Error, CrashLoopBackOff etc.)
 - Pods that are not running for more than 30 minutes
 - Pods that have restarted in the last hour with a non zero exit code
@@ -13,7 +13,7 @@ Watched namespaces and nodes can be configured with the WATCH_NODES and WATCH_NA
 
 # How to install
 
-Fill in your slack token and channel id in `kube/deployment.yaml`. Then deploy the reporter:
+Fill in your slack token and channel_id in `kube/deployment.yaml`. Then deploy the reporter:
 
 ```
 kubectl create namespace kube-problem
