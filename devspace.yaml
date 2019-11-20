@@ -14,3 +14,5 @@ deployments:
 dev:
   sync:
     - imageName: default
+  interactive:
+    defaultEnabled: true

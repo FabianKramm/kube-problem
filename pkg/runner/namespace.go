@@ -39,29 +39,29 @@ func (r *Runner) doWatchNamespace(namespace string) error {
 
 		status := GetPodStatus(&pod)
 		if CriticalStatus[status] {
-			msg := fmt.Sprintf("Pod %s/%s has critical status '%s'", pod.Namespace, pod.Name, status)
+			msg := fmt.Sprintf("Pod '%s/%s' has critical status '%s'", pod.Namespace, pod.Name, status)
 			problem = &problemDesc{
 				problemType: problemTypePodStatus,
 
 				message: msg,
 				id:      pod.Name + "/" + pod.Namespace + string(problemTypePodStatus),
 
-				kind:      pod.Kind,
+				kind:      resourceKindPod,
 				name:      pod.Name,
 				namespace: pod.Namespace,
 				occured:   time.Now(),
 			}
 		} else if OkayStatus[status] {
 			for _, containerStatus := range pod.Status.ContainerStatuses {
-				if containerStatus.LastTerminationState.Terminated != nil && time.Since(containerStatus.LastTerminationState.Terminated.FinishedAt.Time) <= time.Hour {
-					msg := fmt.Sprintf("Pod %s/%s has restarted %d seconds ago due to %s", pod.Namespace, pod.Name, time.Since(containerStatus.LastTerminationState.Terminated.FinishedAt.Time)/time.Second, containerStatus.LastTerminationState.Terminated.Reason)
+				if containerStatus.LastTerminationState.Terminated != nil && time.Since(containerStatus.LastTerminationState.Terminated.FinishedAt.Time) <= time.Hour && containerStatus.LastTerminationState.Terminated.ExitCode != 0 {
+					msg := fmt.Sprintf("Pod '%s/%s' has restarted %d seconds ago due to '%s' with exit code '%d'", pod.Namespace, pod.Name, time.Since(containerStatus.LastTerminationState.Terminated.FinishedAt.Time)/time.Second, containerStatus.LastTerminationState.Terminated.Reason, containerStatus.LastTerminationState.Terminated.ExitCode)
 					problem = &problemDesc{
 						problemType: problemTypePodRestarts,
 
 						message: msg,
 						id:      pod.Name + "/" + pod.Namespace + string(problemTypePodRestarts),
 
-						kind:      pod.Kind,
+						kind:      resourceKindPod,
 						name:      pod.Name,
 						namespace: pod.Namespace,
 						occured:   time.Now(),
@@ -71,14 +71,14 @@ func (r *Runner) doWatchNamespace(namespace string) error {
 				}
 			}
 		} else {
-			msg := fmt.Sprintf("Pod %s/%s is not starting with status '%s'", pod.Namespace, pod.Name, status)
+			msg := fmt.Sprintf("Pod '%s/%s' is not starting with status '%s'", pod.Namespace, pod.Name, status)
 			problem = &problemDesc{
 				problemType: problemTypePodPending,
 
 				message: msg,
 				id:      pod.Name + "/" + pod.Namespace + string(problemTypePodPending),
 
-				kind:      pod.Kind,
+				kind:      resourceKindPod,
 				name:      pod.Name,
 				namespace: pod.Namespace,
 				occured:   time.Now(),
@@ -93,7 +93,7 @@ func (r *Runner) doWatchNamespace(namespace string) error {
 			}
 		} else {
 			for _, problem := range r.problems {
-				if problem.kind == pod.Kind && problem.name == pod.Name && problem.namespace == pod.Namespace {
+				if problem.kind == resourceKindPod && problem.name == pod.Name && problem.namespace == pod.Namespace {
 					err = r.resolveProblem(problem)
 					if err != nil {
 						return err

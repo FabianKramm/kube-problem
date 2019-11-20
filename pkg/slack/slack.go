@@ -2,6 +2,8 @@ package slack
 
 import (
 	"errors"
+	"log"
+	"strings"
 
 	slackapi "github.com/nlopes/slack"
 )
@@ -34,10 +36,34 @@ func (c *Client) GetChannelInfo() (*slackapi.Channel, error) {
 
 // SendMessage sends a new slack message to the channel
 func (c *Client) SendMessage(message string) error {
-	_, _, err := c.API.PostMessage(c.Channel, slackapi.MsgOptionText(message, false))
-	if err != nil {
-		return err
+	var err error
+	shouldRetry := true
+	for shouldRetry {
+		_, _, err = c.API.PostMessage(c.Channel, slackapi.MsgOptionText(message, false))
+		shouldRetry = isNetErrorRetryable(err)
+		if err != nil && shouldRetry {
+			log.Printf("Retry sending to slack due to error: %v", err)
+		}
 	}
 
-	return nil
+	return err
+}
+
+// isNetErrorRetryable - is network error retryable.
+func isNetErrorRetryable(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if strings.Contains(err.Error(), "Connection closed by foreign host") {
+		return true
+	} else if strings.Contains(err.Error(), "net/http: TLS handshake timeout") {
+		return true
+	} else if strings.Contains(err.Error(), "i/o timeout") {
+		return true
+	} else if strings.Contains(err.Error(), "connection timed out") {
+		return true
+	}
+
+	return false
 }

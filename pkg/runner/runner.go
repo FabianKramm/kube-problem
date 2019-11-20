@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/FabianKramm/kube-problem/pkg/kube"
@@ -11,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const defaultInterval = time.Minute
+const defaultInterval = time.Second * 10
 const reportInterval = time.Minute * 60
 
 type problemType string
@@ -23,6 +24,13 @@ const (
 	problemTypePodStatus   problemType = "PodStatus"
 	problemTypePodRestarts problemType = "PodRestarts"
 	problemTypePodPending  problemType = "PodPending"
+)
+
+type resourceKind string
+
+const (
+	resourceKindPod  resourceKind = "Pod"
+	resourceKindNode resourceKind = "Node"
 )
 
 // Runner is continously checking for problems in a cluster
@@ -39,7 +47,7 @@ type Runner struct {
 
 type problemDesc struct {
 	problemType problemType
-	kind        string
+	kind        resourceKind
 	name        string
 	namespace   string
 
@@ -85,6 +93,8 @@ func NewRunner(client kube.Client, slackClient *slack.Client, watchNodes bool, w
 
 		watchNodes:      watchNodes,
 		watchNamespaces: watchNamespaces,
+
+		problems: make(map[string]*problemDesc),
 	}, nil
 }
 
@@ -93,6 +103,8 @@ func (r *Runner) Start() error {
 	log.Printf("Starting runner with interval of %d seconds", defaultInterval/time.Second)
 
 	for {
+		start := time.Now()
+
 		// Watch nodes
 		if r.watchNodes {
 			err := r.doWatchNodes()
@@ -111,8 +123,11 @@ func (r *Runner) Start() error {
 			}
 		}
 
-		// Sleep
-		time.Sleep(defaultInterval)
+		// Sleep for the remainding interval duration
+		wait := defaultInterval - time.Since(start)
+		if wait > 0 {
+			time.Sleep(wait)
+		}
 
 		// Cleanup old problems
 		for key, problem := range r.problems {
@@ -129,6 +144,9 @@ func (r *Runner) reportProblem(problem *problemDesc) error {
 	}
 
 	r.problems[problem.id].occuredCounter++
+	if r.problems[problem.id].reported == false {
+		log.Printf("Problem occured (not reported yet, counter: %d): %s", r.problems[problem.id].occuredCounter, problem.message)
+	}
 
 	// Node condition
 	if r.problems[problem.id].problemType == problemTypeNodeCondition {
@@ -161,6 +179,9 @@ func (r *Runner) reportProblem(problem *problemDesc) error {
 func (r *Runner) resolveProblem(problem *problemDesc) error {
 	problem = r.problems[problem.id]
 	problem.resolvedCounter++
+	if problem.reported == true {
+		log.Printf("Problem resolved ('%s') (resolving not reported yet, counter: %d)", problem.message, problem.resolvedCounter)
+	}
 
 	// Node condition
 	if problem.problemType == problemTypeNodeCondition {
@@ -206,7 +227,7 @@ func (r *Runner) resolveProblem(problem *problemDesc) error {
 }
 
 func (r *Runner) sendResolveMessage(problem *problemDesc) error {
-	msg := fmt.Sprintf("%s everyone :v:, it's me again, remember the problem with %s %s? Good news, seems like this is not a problem anymore :tada:", getGreeting(), problem.kind, problem.name)
+	msg := fmt.Sprintf("%s do you remember the problem with %s '%s'? Good news, seems like this is not a problem anymore :tada:", getGreeting(), problem.kind, problem.name)
 	log.Printf("Sending resolve message to slack (%s)", msg)
 	return r.slackClient.SendMessage(msg)
 }
@@ -218,25 +239,51 @@ func (r *Runner) sendReportMessage(problem *problemDesc) error {
 
 	problem.reported = true
 	if problem.namespace != "" {
-		msg := fmt.Sprintf("%s everyone :wave:, there seems to be a problem with %s %s in namespace %s: %s", getGreeting(), problem.kind, problem.name, problem.namespace, problem.message)
+		msg := fmt.Sprintf("%s there seems to be a problem with %s '%s' in namespace '%s': %s", getGreeting(), problem.kind, problem.name, problem.namespace, problem.message)
 		log.Printf("Sending report message to slack (%s)", msg)
 		return r.slackClient.SendMessage(msg)
 	}
 
-	msg := fmt.Sprintf("%s everyone :wave:, there seems to be a problem with %s %s: %s", getGreeting(), problem.kind, problem.name, problem.message)
+	msg := fmt.Sprintf("%s there seems to be a problem with %s '%s': %s", getGreeting(), problem.kind, problem.name, problem.message)
 	log.Printf("Sending report message to slack (%s)", msg)
 	return r.slackClient.SendMessage(msg)
 }
 
+var greetings = []string{
+	"Guys real talk :point_up:,",
+	"It's me again, the lovely bot from the neighborhood and",
+	"Alright, so",
+	"Yo bois :dark_sunglasses:,",
+	"Sorry to interrupt,",
+	"I'm back :v:,",
+	"Yes I know I'm annoying :grin:, but",
+	"Where is the cluster admin :face_with_monocle:, because",
+	"I just wanted to chill :expressionless: and then I checked the cluster one more time and",
+	"What would you do without me? I just checked the cluster again and",
+}
+
 func getGreeting() string {
-	now := time.Now()
-	if now.Hour() < 12 {
-		return "Good morning"
-	} else if now.Hour() < 15 {
-		return "Hello"
-	} else if now.Hour() < 18 {
-		return "Good afternoon"
+	rand.Seed(time.Now().Unix())
+
+	num := rand.Intn(len(greetings) + 1)
+	if num == len(greetings) {
+		now := time.Now()
+		if now.Weekday() == time.Sunday {
+			return "Damn sorry to interrupt your Sunday :face_with_rolling_eyes:, but"
+		} else if now.Weekday() == time.Saturday {
+			return "Yes I know it's weekend, but"
+		}
+
+		if now.Hour() < 12 {
+			return "Good morning everyone :wave:,"
+		} else if now.Hour() < 15 {
+			return "Hello everyone :wave:,"
+		} else if now.Hour() < 18 {
+			return "Good afternoon everyone :wave:,"
+		}
+
+		return "Good evening everyone :wave:,"
 	}
 
-	return "Good evening"
+	return greetings[num]
 }

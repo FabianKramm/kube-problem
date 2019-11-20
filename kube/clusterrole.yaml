@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: kube-problem
 rules:
-  - apiGroups: [""]
+  - apiGroups: ["", "metrics.k8s.io"]
     resources:
       - nodes
       - pods

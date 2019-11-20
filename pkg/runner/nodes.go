@@ -35,10 +35,10 @@ func (r *Runner) doWatchNodes() error {
 		if err != nil {
 			return err
 		} else if nodeMetricsAvailable && nodeMetricsMap[node.Name] == nil {
-			msg := fmt.Sprintf("Metrics for node %s cannot be retrieved. This could mean the node crashed or is under heavy load", node.Name)
+			msg := fmt.Sprintf("Metrics for node '%s' cannot be retrieved. This could mean the node crashed or is under heavy load", node.Name)
 			problem = &problemDesc{
 				problemType: problemTypeNodeResourcePressure,
-				kind:        node.Kind,
+				kind:        resourceKindNode,
 				name:        node.Name,
 
 				id:      msg,
@@ -55,10 +55,10 @@ func (r *Runner) doWatchNodes() error {
 			memUsage := float64(memUsed) / float64(memAvail)
 
 			if cpuUsage >= 0.95 {
-				msg := fmt.Sprintf("Node %s has constantly around 100%% cpu usage, this could slow down workloads running on the node", node.Name)
+				msg := fmt.Sprintf("Node '%s' has constantly around 100%% cpu usage, this could slow down workloads running on the node", node.Name)
 				problem = &problemDesc{
 					problemType: problemTypeNodeResourcePressure,
-					kind:        node.Kind,
+					kind:        resourceKindNode,
 					name:        node.Name,
 
 					id:      msg,
@@ -66,10 +66,10 @@ func (r *Runner) doWatchNodes() error {
 					occured: time.Now(),
 				}
 			} else if memUsage >= 0.95 {
-				msg := fmt.Sprintf("Node %s has constantly around 100%% memory usage, this could slow down workloads running on the node", node.Name)
+				msg := fmt.Sprintf("Node '%s' has constantly around 100%% memory usage, this could slow down workloads running on the node", node.Name)
 				problem = &problemDesc{
 					problemType: problemTypeNodeResourcePressure,
-					kind:        node.Kind,
+					kind:        resourceKindNode,
 					name:        node.Name,
 
 					id:      msg,
@@ -86,7 +86,7 @@ func (r *Runner) doWatchNodes() error {
 				}
 			} else {
 				for _, problem := range r.problems {
-					if problem.kind == node.Kind && problem.name == node.Name {
+					if problem.kind == resourceKindNode && problem.name == node.Name {
 						err = r.resolveProblem(problem)
 						if err != nil {
 							return err
@@ -104,10 +104,10 @@ func isNodeProblem(node *v1.Node) (*problemDesc, error) {
 	// Check for conditions
 	for _, condition := range node.Status.Conditions {
 		if condition.Type != v1.NodeReady && condition.Status != v1.ConditionFalse {
-			msg := fmt.Sprintf("Node %s has condition (%s): %s", node.Name, condition.Type, condition.Message)
+			msg := fmt.Sprintf("Node '%s' has condition (%s): %s", node.Name, condition.Type, condition.Message)
 			return &problemDesc{
 				problemType: problemTypeNodeCondition,
-				kind:        node.Kind,
+				kind:        resourceKindNode,
 				name:        node.Name,
 
 				message: msg,
@@ -115,10 +115,10 @@ func isNodeProblem(node *v1.Node) (*problemDesc, error) {
 				occured: time.Now(),
 			}, nil
 		} else if condition.Type == v1.NodeReady && condition.Status != v1.ConditionTrue {
-			msg := fmt.Sprintf("Node %s has ready status '%s': %s", node.Name, condition.Status, condition.Message)
+			msg := fmt.Sprintf("Node '%s' has ready status '%s': %s", node.Name, condition.Status, condition.Message)
 			return &problemDesc{
 				problemType: problemTypeNodeCondition,
-				kind:        node.Kind,
+				kind:        resourceKindNode,
 				name:        node.Name,
 
 				message: msg,

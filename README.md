@@ -16,3 +16,19 @@ You also need to create a cluster role binding for the service account kube-prob
 # replace NAMESPACE with the namespace you have deployed kube-problem into
 kubectl create clusterrolebinding kube-problem-binding --clusterrole=kube-problem --serviceaccount=kube-problem:kube-problem
 ```
+
+# Develop
+
+Simply run
+
+```
+kubectl create namespace kube-problem
+kubectl create clusterrolebinding kube-problem-binding --clusterrole=kube-problem --serviceaccount=kube-problem:kube-problem
+devspace dev -n kube-problem
+```
+
+and then start the reporter in the terminal with:
+
+```
+go run main.go
+```
