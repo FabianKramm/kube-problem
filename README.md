@@ -2,12 +2,14 @@
 
 Simple kube cluster watcher that checks periodically if all nodes and pods in a certain namespace are running and sends a message to a slack channel if there is a problem with a node or pod.
 
-Things this reporter reports:
+Problems reporter reports:
 - Node conditions such as memory pressure or disk pressure
 - High node resource utilization (>95% of memory or cpu)
 - Critical pod status such as (ErrImagePull, Error, CrashLoopBackOff etc.)
 - Pods that are not running for more than 30 minutes
 - Pods that have restarted in the last hour with a non zero exit code
+
+Watched namespaces and nodes can be configured with the WATCH_NODES and WATCH_NAMESPACES environment variables.
 
 # How to install
 
