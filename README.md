@@ -12,9 +12,9 @@ kubectl apply -n kube-problem -f kube
 kubectl create clusterrolebinding kube-problem-binding --clusterrole=kube-problem --serviceaccount=kube-problem:kube-problem
 ```
 
-# Develop
+# Contribute
 
-Simply run
+To start kube problem reporter in development mode, download devspace and simply run:
 
 ```
 kubectl create namespace kube-problem
@@ -22,7 +22,7 @@ kubectl create clusterrolebinding kube-problem-binding --clusterrole=kube-proble
 devspace dev -n kube-problem
 ```
 
-and then start the reporter in the terminal with:
+Then start the reporter in the terminal with:
 
 ```
 go run main.go
