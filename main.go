@@ -39,8 +39,6 @@ func main() {
 	}
 	log.Printf("Using slack channel '%s' for alerts", slackChannel.Name)
 
-	os.Setenv("WATCH_NAMESPACES", "default")
-
 	// Create the runner
 	runner, err := runner.NewRunner(client, slackClient, os.Getenv("WATCH_NODES") != "false", strings.Split(os.Getenv("WATCH_NAMESPACES"), ","))
 	if err != nil {
