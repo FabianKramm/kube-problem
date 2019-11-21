@@ -1,6 +1,6 @@
 # Kube Problem Reporter
 
-Simple kube cluster watcher that checks periodically if all nodes and pods in a certain namespace are running and sends a message to a slack channel if there is a problem with a node or pod.
+Simple kubernetes cluster watcher that checks periodically if all nodes and pods in a certain namespace are running and sends a message to a slack channel if there is a problem with a node or pod.
 
 Problems reporter reports:
 - Node conditions such as memory pressure or disk pressure
