@@ -5,7 +5,7 @@ Simple kubernetes cluster watcher that checks periodically if all nodes and pods
 Problems reporter reports:
 - Node conditions such as memory pressure or disk pressure
 - High node resource utilization (>95% of memory or cpu) (only if metrics server is available)
-- Critical pod status such as (ErrImagePull, Error, CrashLoopBackOff etc.)
+- Critical pod status such as ErrImagePull, Error, CrashLoopBackOff etc.
 - Pods that are still not running for more than 30 minutes
 - Pods that have restarted in the last hour with a non zero exit code
 
